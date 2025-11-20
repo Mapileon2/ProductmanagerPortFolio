@@ -37,6 +37,19 @@ function transformJourney(dbRow) {
 async function testJourneyRendering() {
     console.log('\n1️⃣  Getting raw journey data from database...');
     
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+    await supabase.auth.signInWithPassword({ email, password });
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .single();
+
+    const orgId = profile ? profile.org_id : 'default-org';
+
     const { data: rawJourney, error: journeyError } = await supabase
         .from('journey_timelines')
         .select(`
@@ -53,7 +66,7 @@ async function testJourneyRendering() {
                 order_key
             )
         `)
-        .eq('org_id', 'default-org')
+        .eq('org_id', orgId)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();

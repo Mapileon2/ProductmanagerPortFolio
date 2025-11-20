@@ -76,6 +76,11 @@ async function comprehensiveBackendCheck() {
 
     // Step 5: Check authentication status
     console.log('\n5. Checking authentication status...');
+
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+    await supabase.auth.signInWithPassword({ email, password });
+
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {

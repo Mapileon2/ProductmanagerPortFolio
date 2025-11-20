@@ -24,6 +24,11 @@ async function testCVManagement() {
 
   try {
     // Get current user
+
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+    await supabase.auth.signInWithPassword({ email, password });
+
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {

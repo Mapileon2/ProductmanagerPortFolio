@@ -13,6 +13,11 @@ console.log('='.repeat(60));
 
 async function checkAISettings() {
   try {
+    // Login first
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+    await supabase.auth.signInWithPassword({ email, password });
+
     // 1. Check database schema
     console.log('\n📋 Step 1: Checking database schema...');
     const { data: tables, error: schemaError } = await supabase
@@ -43,7 +48,7 @@ async function checkAISettings() {
     if (configs.length > 0) {
       configs.forEach((config, index) => {
         console.log(`\n   Configuration ${index + 1}:`);
-        console.log(`   - Config ID: ${config.config_id}`);
+        console.log(`   - Config ID: ${config.configuration_id}`);
         console.log(`   - Org ID: ${config.org_id}`);
         console.log(`   - Provider: ${config.provider}`);
         console.log(`   - Selected Model: ${config.selected_model}`);

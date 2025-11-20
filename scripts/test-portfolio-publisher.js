@@ -45,6 +45,11 @@ async function testPortfolioPublisher() {
     
     // Test 3: Check current user
     console.log('\n3. Checking current user...');
+
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+    await supabase.auth.signInWithPassword({ email, password });
+
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
