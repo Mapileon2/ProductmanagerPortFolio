@@ -8,13 +8,11 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY
 )
 
-const CURRENT_USER_ID = '9d75db25-23d4-4710-8167-c0ca6c72e2ba'
-
-async function testSection(tableName, idColumn, label) {
+async function testSection(tableName, idColumn, label, userId) {
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('org_id')
-    .eq('user_id', CURRENT_USER_ID)
+    .eq('user_id', userId)
     .single()
   
   if (!profile) return { status: 'error', message: 'No profile' }
@@ -32,6 +30,10 @@ async function testSection(tableName, idColumn, label) {
   } else if (count === 1) {
     return { status: 'ok', count: 1 }
   } else {
+    // For skill_categories, we might have multiple categories
+    if (tableName === 'skill_categories') {
+         return { status: 'ok', count: count }
+    }
     return { status: 'duplicates', count }
   }
 }
@@ -39,15 +41,32 @@ async function testSection(tableName, idColumn, label) {
 async function testAllPersistence() {
   console.log('🧪 TESTING ALL SECTION PERSISTENCE\n')
   console.log('=' .repeat(70))
+
+  // Login first
+  const email = process.env.TEST_EMAIL || 'test@example.com';
+  const password = process.env.TEST_PASSWORD || 'password123';
+
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (loginError) {
+    console.error('❌ Login failed:', loginError.message);
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const CURRENT_USER_ID = user.id;
   
   const sections = [
     { table: 'story_sections', id: 'story_id', label: 'My Story' },
     { table: 'cv_sections', id: 'cv_section_id', label: 'CV' },
-    { table: 'contact_sections', id: 'contact_section_id', label: 'Contact' },
+    { table: 'contact_sections', id: 'contact_id', label: 'Contact' },
     { table: 'carousels', id: 'carousel_id', label: 'Carousel' },
-    { table: 'my_journey', id: 'journey_id', label: 'My Journey' },
-    { table: 'magic_toolbox', id: 'toolbox_id', label: 'Magic Toolbox' },
-    { table: 'ai_settings', id: 'settings_id', label: 'AI Settings' }
+    { table: 'journey_timelines', id: 'timeline_id', label: 'My Journey' },
+    { table: 'skill_categories', id: 'category_id', label: 'Magic Toolbox (Categories)' },
+    { table: 'ai_configurations', id: 'configuration_id', label: 'AI Settings' }
   ]
   
   console.log('📊 Section Status:\n')
@@ -55,7 +74,7 @@ async function testAllPersistence() {
   let allGood = true
   
   for (const section of sections) {
-    const result = await testSection(section.table, section.id, section.label)
+    const result = await testSection(section.table, section.id, section.label, CURRENT_USER_ID)
     
     let icon, message
     if (result.status === 'ok') {

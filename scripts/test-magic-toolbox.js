@@ -23,6 +23,20 @@ async function testMagicToolbox() {
   console.log('🧪 Testing Magic Toolbox Implementation\n');
 
   try {
+    // Login first
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (loginError) {
+      console.error('❌ Login failed:', loginError.message);
+      return;
+    }
+
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {

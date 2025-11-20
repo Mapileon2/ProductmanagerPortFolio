@@ -33,14 +33,41 @@ async function runTests() {
   let testSlug = null;
 
   try {
+    // Login first
+    console.log('\n🔑 Logging in...');
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (loginError) {
+      console.error('❌ Login failed:', loginError.message);
+      return;
+    }
+    console.log('✅ Login successful');
+
+    // Get user org_id
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .single();
+
+    const orgId = profile ? profile.org_id : 'default-org';
+    console.log('✅ Using Org ID:', orgId);
+
     // Step 1: Create a test case study
     console.log('\n📝 Step 1: Creating test case study...');
     const case_study_id = `test-${Date.now()}`;
     const createData = {
       case_study_id,
-      org_id: 'default-org',
+      org_id: orgId,
       title: 'E2E Test Case Study',
-      slug: 'e2e-test-case-study',
+      slug: `e2e-test-${Date.now()}`,
       template: 'default',
       status: 'draft',
       is_published: false,
@@ -141,7 +168,7 @@ async function runTests() {
     const { data: publishedList, error: listError } = await supabase
       .from('case_studies')
       .select('*')
-      .eq('org_id', 'default-org')
+      .eq('org_id', orgId)
       .eq('is_published', true)
       .order('created_at', { ascending: false });
 

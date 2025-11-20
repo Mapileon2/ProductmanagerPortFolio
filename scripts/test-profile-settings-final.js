@@ -13,9 +13,12 @@ async function testProfileSettingsFinal() {
   try {
     // Step 1: Login
     console.log('1. Logging in...');
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+
     const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email: 'test@example.com',
-      password: 'password123'
+      email,
+      password
     });
     
     if (loginError) {

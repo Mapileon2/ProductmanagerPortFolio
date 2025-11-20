@@ -9,11 +9,26 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY
 );
 
-const CURRENT_USER_ID = '9d75db25-23d4-4710-8167-c0ca6c72e2ba';
-
 async function testJourneySave() {
   console.log('🔍 Testing Journey Save Functionality\n');
   console.log('='.repeat(70));
+
+  // Login first
+  const email = process.env.TEST_EMAIL || 'test@example.com';
+  const password = process.env.TEST_PASSWORD || 'password123';
+
+  const { error: loginError } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (loginError) {
+    console.error('❌ Login failed:', loginError.message);
+    return;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const CURRENT_USER_ID = user.id;
 
   // Step 1: Check user profile
   console.log('\n📋 Step 1: Checking User Profile\n');

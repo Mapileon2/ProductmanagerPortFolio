@@ -26,6 +26,21 @@ async function testAllSections() {
     // Authentication Check
     console.log('\n1️⃣  AUTHENTICATION CHECK');
     console.log('-'.repeat(60));
+
+    // Login first
+    const email = process.env.TEST_EMAIL || 'test@example.com';
+    const password = process.env.TEST_PASSWORD || 'password123';
+
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (loginError) {
+      console.error('❌ Login failed:', loginError.message);
+      return;
+    }
+
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {

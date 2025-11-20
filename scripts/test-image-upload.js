@@ -15,9 +15,12 @@ async function testImageUpload() {
   try {
     // Step 1: Test authentication
     console.log('1️⃣ Testing authentication...');
+    const email = process.env.TEST_EMAIL || 'admin@arpanportfolio.com';
+    const password = process.env.TEST_PASSWORD || 'ArpanAdmin2024!';
+
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: 'admin@arpanportfolio.com',
-      password: 'ArpanAdmin2024!'
+      email,
+      password
     });
     
     if (authError) {
@@ -67,12 +70,22 @@ async function testImageUpload() {
       console.log('❌ Cloudinary connectivity issue:', err.message);
     }
     
+    // Get user org_id
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('org_id')
+      .eq('user_id', user.id)
+      .single();
+
+    const orgId = profile ? profile.org_id : 'arpan-portfolio';
+
     // Step 4: Test database access for carousel
     console.log('\n4️⃣ Testing carousel database access...');
     const { data: carousels, error: carouselError } = await supabase
       .from('carousels')
       .select('*')
-      .eq('org_id', 'arpan-portfolio');
+      .eq('org_id', orgId);
     
     if (carouselError) {
       console.log('❌ Carousel access failed:', carouselError.message);
@@ -84,8 +97,8 @@ async function testImageUpload() {
         const { error: createError } = await supabase
           .from('carousels')
           .insert({
-            carousel_id: 'default-carousel',
-            org_id: 'arpan-portfolio',
+            carousel_id: `default-carousel-${Date.now()}`,
+            org_id: orgId,
             name: 'Homepage Carousel'
           });
         
@@ -102,7 +115,7 @@ async function testImageUpload() {
     const { data: assets, error: assetsError } = await supabase
       .from('assets')
       .select('*')
-      .eq('org_id', 'arpan-portfolio')
+      .eq('org_id', orgId)
       .limit(1);
     
     if (assetsError) {
