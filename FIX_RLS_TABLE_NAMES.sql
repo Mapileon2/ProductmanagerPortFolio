@@ -1,9 +1,7 @@
--- Fix RLS policies to use correct table names
+-- Fix RLS policies to use correct table names AND enforce SaaS access control
 -- Run this in Supabase SQL Editor
 
--- 1. Fix Journey RLS (Correct table is 'journey_timelines', 'journeys' does not exist in schema)
--- We ignore 'journeys' table as it doesn't exist.
-
+-- 1. Fix Journey RLS (Correct table is 'journey_timelines')
 DROP POLICY IF EXISTS "Public read access for published journey timelines" ON journey_timelines;
 
 CREATE POLICY "Public read access for published journey timelines" ON journey_timelines
@@ -15,7 +13,7 @@ CREATE POLICY "Public read access for published journey timelines" ON journey_ti
         )
     );
 
--- 2. Fix Journey Milestones RLS (Correct table is 'journey_milestones')
+-- 2. Fix Journey Milestones RLS
 DROP POLICY IF EXISTS "Public read access for published journey milestones" ON journey_milestones;
 
 CREATE POLICY "Public read access for published journey milestones" ON journey_milestones
@@ -28,11 +26,7 @@ CREATE POLICY "Public read access for published journey milestones" ON journey_m
         )
     );
 
--- 3. Fix Magic Toolbox RLS
--- 'magic_toolboxes' table does not exist in schema. Schema uses 'skill_categories' linked directly to organizations.
--- We skip dropping policies on non-existent tables to prevent script errors.
-
--- 4. Fix Skill Categories RLS
+-- 3. Fix Skill Categories RLS
 DROP POLICY IF EXISTS "Public read access for published skill categories" ON skill_categories;
 
 CREATE POLICY "Public read access for published skill categories" ON skill_categories
@@ -44,7 +38,7 @@ CREATE POLICY "Public read access for published skill categories" ON skill_categ
         )
     );
 
--- 5. Fix Skills RLS
+-- 4. Fix Skills RLS
 DROP POLICY IF EXISTS "Public read access for published skills" ON skills;
 
 CREATE POLICY "Public read access for published skills" ON skills
@@ -57,7 +51,7 @@ CREATE POLICY "Public read access for published skills" ON skills
         )
     );
 
--- 6. Fix Tools RLS
+-- 5. Fix Tools RLS
 DROP POLICY IF EXISTS "Public read access for published tools" ON tools;
 
 CREATE POLICY "Public read access for published tools" ON tools
@@ -69,7 +63,7 @@ CREATE POLICY "Public read access for published tools" ON tools
         )
     );
 
--- 7. Fix CV Sections RLS
+-- 6. Fix CV Sections RLS
 DROP POLICY IF EXISTS "Public read access for published cv sections" ON cv_sections;
 
 CREATE POLICY "Public read access for published cv sections" ON cv_sections
@@ -81,7 +75,7 @@ CREATE POLICY "Public read access for published cv sections" ON cv_sections
         )
     );
 
--- 8. Fix CV Versions RLS
+-- 7. Fix CV Versions RLS
 DROP POLICY IF EXISTS "Public read access for published cv versions" ON cv_versions;
 
 CREATE POLICY "Public read access for published cv versions" ON cv_versions
@@ -90,6 +84,33 @@ CREATE POLICY "Public read access for published cv versions" ON cv_versions
             SELECT 1 FROM cv_sections
             JOIN user_profiles ON user_profiles.org_id = cv_sections.org_id
             WHERE cv_sections.cv_section_id = cv_versions.cv_section_id
+            AND user_profiles.portfolio_status = 'published'
+        )
+    );
+
+-- 8. Fix Case Studies RLS (CRITICAL: Enforce Org Status)
+DROP POLICY IF EXISTS "Public read access for published case studies" ON case_studies;
+
+CREATE POLICY "Public read access for published case studies" ON case_studies
+    FOR SELECT USING (
+        is_published = true AND
+        EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE user_profiles.org_id = case_studies.org_id
+            AND user_profiles.portfolio_status = 'published'
+        )
+    );
+
+-- 9. Fix Case Study Sections RLS
+DROP POLICY IF EXISTS "Public read access for published case study sections" ON case_study_sections;
+
+CREATE POLICY "Public read access for published case study sections" ON case_study_sections
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM case_studies
+            JOIN user_profiles ON user_profiles.org_id = case_studies.org_id
+            WHERE case_studies.case_study_id = case_study_sections.case_study_id
+            AND case_studies.is_published = true
             AND user_profiles.portfolio_status = 'published'
         )
     );
