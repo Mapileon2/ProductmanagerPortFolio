@@ -59,19 +59,12 @@ export const useDataSymmetry = () => {
     }
   }, [checkSymmetry]);
 
-  // Auto-check symmetry on mount and periodically
+  // Auto-check symmetry on mount only
+  // We removed the 30s polling interval to improve performance.
+  // Realtime subscriptions in HomePage.tsx handle the "live" aspect.
   useEffect(() => {
     checkSymmetry();
-    
-    // Check symmetry every 30 seconds if there are issues
-    const interval = setInterval(() => {
-      if (!symmetryStatus.isSymmetric) {
-        checkSymmetry();
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [checkSymmetry, symmetryStatus.isSymmetric]);
+  }, [checkSymmetry]);
 
   return {
     symmetryStatus,

@@ -141,6 +141,8 @@ const Carousel: React.FC = () => {
                                 <img
                                     src={image.src}
                                     alt={image.title}
+                                    loading={index === 0 ? "eager" : "lazy"}
+                                    decoding="async"
                                     className="w-full h-full object-contain hover:scale-105 transition-transform duration-500"
                                     style={{
                                         objectFit: 'contain',
