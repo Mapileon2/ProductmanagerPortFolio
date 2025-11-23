@@ -2221,6 +2221,29 @@ export const api = {
     return data;
   },
 
+  // System Stats (SaaS Feature)
+  async getSystemStats(): Promise<{ userCount: number; publishedCount: number }> {
+    if (isDevelopmentMode) {
+      return {
+        userCount: 124,
+        publishedCount: 86
+      };
+    }
+
+    // Use RPC to get counts securely without exposing user table
+    const { data, error } = await supabase.rpc('get_system_stats');
+
+    if (error) {
+      console.error('Error fetching system stats:', error);
+      return { userCount: 0, publishedCount: 0 };
+    }
+
+    return {
+      userCount: data.user_count || 0,
+      publishedCount: data.published_count || 0
+    };
+  },
+
   // Data Symmetry Methods (for useDataSymmetry hook)
   async verifyDataSymmetry(): Promise<{
     isSymmetric: boolean;

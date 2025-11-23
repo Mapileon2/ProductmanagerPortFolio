@@ -582,6 +582,28 @@ $$;
 GRANT EXECUTE ON FUNCTION publish_portfolio(VARCHAR) TO authenticated;
 GRANT EXECUTE ON FUNCTION unpublish_portfolio(VARCHAR) TO authenticated;
 
+-- System Stats Function (SaaS Feature)
+CREATE OR REPLACE FUNCTION get_system_stats()
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_user_count INTEGER;
+    v_published_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO v_user_count FROM user_profiles;
+    SELECT COUNT(*) INTO v_published_count FROM user_profiles WHERE portfolio_status = 'published';
+
+    RETURN jsonb_build_object(
+        'user_count', v_user_count,
+        'published_count', v_published_count
+    );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_system_stats() TO anon, authenticated;
+
 -- Initial Data
 INSERT INTO organizations (org_id, name, slug)
 VALUES ('default-org', 'Default Organization', 'default')

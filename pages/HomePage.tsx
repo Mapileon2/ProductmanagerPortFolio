@@ -10,6 +10,7 @@ import { Project, View, MyStorySection, MagicToolbox, MyJourney, ContactSection,
 import { api } from '../services/api';
 import { useDataSymmetry } from '../hooks/useDataSymmetry';
 import { createClient } from '@supabase/supabase-js';
+import LandingPage from './LandingPage';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -296,29 +297,11 @@ const HomePage: React.FC<HomePageProps> = ({ navigateTo, portfolioData }) => {
                 console.error('❌ Error fetching authenticated data:', error);
             }
 
-            // PRIORITY 3: Load first public portfolio as fallback
-            try {
-                console.log('🌐 Loading first public portfolio...');
-                const firstPublicPortfolio = await api.getFirstPublicPortfolio();
-                if (firstPublicPortfolio) {
-                    console.log('✅ Using first public portfolio data');
-                    setProjects(firstPublicPortfolio.projects || []);
-                    setFilteredProjects(firstPublicPortfolio.projects || []);
-                    setMyStory(firstPublicPortfolio.story);
-                    setMagicToolbox(firstPublicPortfolio.toolbox);
-                    setMyJourney(firstPublicPortfolio.journey);
-                    setContactSection(firstPublicPortfolio.contact);
-                    setCVSection(firstPublicPortfolio.cv);
-                    
-                    // Set up real-time subscriptions for public fallback
-                    const subs = setupPublicRealtimeSubscriptions(firstPublicPortfolio.profile.org_id);
-                    setSubscriptions(subs);
-                } else {
-                    console.log('❌ No public portfolio found - showing empty state');
-                }
-            } catch (error) {
-                console.error('❌ Error loading public portfolio:', error);
-            }
+            // PRIORITY 3: SaaS Landing Page Mode
+            // If we are not authenticated and no specific portfolio data is passed,
+            // we do NOTHING here. The component will render the LandingPage
+            // because state variables (projects, etc.) will remain empty.
+            console.log('🌐 No specific data found - Rendering SaaS Landing Page');
         };
 
         // 🔄 SYMMETRY FUNCTION: Ensures authenticated data is mirrored to public
@@ -382,6 +365,11 @@ const HomePage: React.FC<HomePageProps> = ({ navigateTo, portfolioData }) => {
     const handleThemeToggle = () => {
         document.documentElement.classList.toggle('dark');
     };
+
+    // If not authenticated and no data loaded (Landing Page Mode)
+    if (!isAuthenticated && !portfolioData && projects.length === 0) {
+        return <LandingPage navigateTo={navigateTo} />;
+    }
 
     return (
         <>
