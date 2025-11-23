@@ -2238,61 +2238,32 @@ export const api = {
       };
     }
 
-    // Optimized symmetry check: fetch counts only where possible
+    // Get admin data (what admin sees)
+    const adminData = {
+      caseStudies: await this.getCaseStudies(),
+      story: await this.getMyStory(),
+      contact: await this.getContactInfo()
+    };
 
-    // 1. Admin Count (Authenticated)
-    const { count: adminCount, error: adminError } = await supabase
-      .from('case_studies')
-      .select('*', { count: 'exact', head: true });
-
-    if (adminError) {
-      console.error('Error fetching admin count:', adminError);
-    }
-
-    // 2. Public Count (Anonymous/Published)
-    // We simulate a public fetch by applying the published filter
-    const { count: publicCount, error: publicError } = await supabase
-      .from('case_studies')
-      .select('*', { count: 'exact', head: true })
-      .eq('org_id', orgId)
-      .eq('is_published', true);
-
-    if (publicError) {
-      console.error('Error fetching public count:', publicError);
-    }
+    // Get public data (what visitors see)
+    const publicData = {
+      caseStudies: await this.getPublicCaseStudies(orgId),
+      story: await this.getPublicMyStory(orgId),
+      contact: await this.getPublicContactInfo(orgId)
+    };
 
     const differences: string[] = [];
-    const safeAdminCount = adminCount || 0;
-    const safePublicCount = publicCount || 0;
 
-    // Note: In a draft system, Admin > Public is expected.
-    // Symmetry here implies "Do the published counts match what we expect?"
-    // But typically "Symmetry" in this context meant "Does the public API see what the Admin PUBLISHED?"
-    // Since we are checking RAW counts, they might differ if drafts exist.
-    // Assuming the intention was "Are there sync issues?", simple count mismatch isn't an error if drafts are allowed.
-    // However, if we assume "Everything should be public" mode, then yes.
-    // Given the SaaS change, `adminCount >= publicCount` is the new normal.
-
-    // Let's verify if any PUBLISHED case studies are NOT visible to public
-    // (This catches the RLS issue we fixed earlier)
-
-    // Fetch count of case studies that ARE published but maybe hidden by RLS
-    // This requires a raw count of 'is_published = true' seen by Admin
-    const { count: adminPublishedCount } = await supabase
-      .from('case_studies')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_published', true);
-
-    // Compare Admin's view of "Published" vs Public's view of "Published"
-    if ((adminPublishedCount || 0) !== safePublicCount) {
-      differences.push(`Visibility Mismatch: Admin sees ${adminPublishedCount} published studies, Public sees ${safePublicCount}`);
+    // Compare case studies
+    if (adminData.caseStudies.length !== publicData.caseStudies.length) {
+      differences.push(`Case studies count mismatch: Admin(${adminData.caseStudies.length}) vs Public(${publicData.caseStudies.length})`);
     }
 
     return {
       isSymmetric: differences.length === 0,
       differences,
-      authenticatedCount: safeAdminCount, // Total admin items
-      publicCount: safePublicCount // Total public items
+      authenticatedCount: adminData.caseStudies.length,
+      publicCount: publicData.caseStudies.length
     };
   },
 

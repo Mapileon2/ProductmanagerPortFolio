@@ -59,7 +59,7 @@ const OptimizedPortfolioPublisher: React.FC<PortfolioPublisherProps> = ({ onClos
             } else {
                 setError(result.message || 'Failed to publish portfolio');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error publishing portfolio:', error);
             
             // Provide specific error messages based on the error
@@ -217,7 +217,7 @@ const OptimizedPortfolioPublisher: React.FC<PortfolioPublisherProps> = ({ onClos
                 <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                     <div className="flex items-start gap-3">
                         <span className="text-2xl">⚠️</span>
-                        <div>
+                        <div className="flex-1">
                             <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
                                 Username Required for Publishing
                             </p>
@@ -238,9 +238,9 @@ const OptimizedPortfolioPublisher: React.FC<PortfolioPublisherProps> = ({ onClos
                                         }
                                     }
                                 }}
-                                className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs rounded-md transition-colors"
+                                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-md transition-all shadow-sm hover:shadow-md"
                             >
-                                Go to Profile Settings
+                                Go to Profile Settings →
                             </button>
                         </div>
                     </div>
@@ -250,21 +250,30 @@ const OptimizedPortfolioPublisher: React.FC<PortfolioPublisherProps> = ({ onClos
             {/* Action Buttons */}
             <div className="flex gap-3">
                 {status?.status === 'published' ? (
-                    <button
-                        onClick={handleUnpublish}
-                        disabled={publishing || !status?.username}
-                        className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
-                    >
-                        {publishing ? 'Unpublishing...' : 'Unpublish Portfolio'}
-                    </button>
+                    <div className="flex-1 relative group">
+                        <button
+                            onClick={handleUnpublish}
+                            disabled={publishing || !status?.username}
+                            className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
+                        >
+                            {publishing ? 'Unpublishing...' : 'Unpublish Portfolio'}
+                        </button>
+                    </div>
                 ) : (
-                    <button
-                        onClick={handlePublish}
-                        disabled={publishing || !status?.username}
-                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
-                    >
-                        {publishing ? 'Publishing...' : 'Publish Portfolio'}
-                    </button>
+                    <div className="flex-1 relative group">
+                        <button
+                            onClick={handlePublish}
+                            disabled={publishing || !status?.username}
+                            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed"
+                        >
+                            {publishing ? 'Publishing...' : 'Publish Portfolio'}
+                        </button>
+                        {(!status?.username && !publishing) && (
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                Set username to publish
+                            </div>
+                        )}
+                    </div>
                 )}
                 
                 <button
