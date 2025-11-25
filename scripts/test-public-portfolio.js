@@ -64,9 +64,9 @@ async function testPublicAccess() {
                 story_paragraphs (
                     paragraph_id,
                     content,
-                    display_order
+                    order_key
                 ),
-                assets:asset_id (
+                assets:image_asset_id (
                     cloudinary_url
                 )
             `)

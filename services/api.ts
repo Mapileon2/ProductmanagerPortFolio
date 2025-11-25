@@ -1940,6 +1940,7 @@ export const api = {
         const { data: newProfile, error: createError } = await supabase
           .from('user_profiles')
           .insert({
+            user_id: user.id,  // Ensure user_id is included
             org_id: orgId,
             name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
             email: user.email,

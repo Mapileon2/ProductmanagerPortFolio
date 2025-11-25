@@ -7,7 +7,6 @@ import CaseStudyPage from './pages/CaseStudyPage';
 import BlogListPage from './pages/BlogListPage';
 import BlogPostPage from './pages/BlogPostPage';
 import PublicPortfolioPage from './pages/PublicPortfolioPage';
-import { PublicPortfolioSnapshotPage } from './pages/PublicPortfolioSnapshotPage';
 import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import DevelopmentBanner from './components/DevelopmentBanner';
@@ -146,7 +145,7 @@ const App: React.FC = () => {
             if (view === 'caseStudy' && selectedCaseStudy) {
                 return <CaseStudyPage caseStudy={selectedCaseStudy} navigateTo={navigateTo} />;
             }
-            return <PublicPortfolioSnapshotPage />;
+            return <PublicPortfolioPage username={publicUsername} navigateTo={navigateTo} />;
         }
 
         switch (view) {
